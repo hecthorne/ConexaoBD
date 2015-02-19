@@ -1,21 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConexaoBD.Acesso
 {
-
     public class Conexao
     {
         public DbProviderFactory FabricaAcesso { get; private set; }
-        public DbConnection _con { get; private set; }
-        public DbTransaction _trans { get; private set; }
-        public bool _comTrans { get; private set; }
+        public DbConnection dbConexao { get; private set; }
+        public DbTransaction dbTransacao { get; private set; }
+        public bool comTransacao { get; private set; }
 
         private String sufixoConexao = "";
 
@@ -46,14 +41,14 @@ namespace ConexaoBD.Acesso
         private void IniciaClasse(bool iniciaTransacao)
         {
             FabricaAcesso = DbProviderFactories.GetFactory(ConfigurationManager.AppSettings["Provedor" + sufixoConexao]);
-            _con = FabricaAcesso.CreateConnection();
-            _con.ConnectionString = ConfigurationManager.AppSettings["ConnectionString" + sufixoConexao];
-            _comTrans = iniciaTransacao;
+            dbConexao = FabricaAcesso.CreateConnection();
+            dbConexao.ConnectionString = ConfigurationManager.AppSettings["ConnectionString" + sufixoConexao];
+            comTransacao = iniciaTransacao;
 
-            if (_comTrans)
+            if (comTransacao)
             {
-                _con.Open();
-                _trans = _con.BeginTransaction();
+                dbConexao.Open();
+                dbTransacao = dbConexao.BeginTransaction();
             }
         }
         #endregion
@@ -61,17 +56,17 @@ namespace ConexaoBD.Acesso
         #region Abrir e Fechar Conexão
         public void AbreConexao()
         {
-            _con.Open();
+            dbConexao.Open();
         }
 
         public void FechaConexao()
         {
-            _con.Close();
+            dbConexao.Close();
         }
 
         public bool ConexaoFechada()
         {
-            return _con.State == ConnectionState.Closed;
+            return dbConexao.State == ConnectionState.Closed;
         }
         #endregion
 
@@ -79,37 +74,37 @@ namespace ConexaoBD.Acesso
 
         public void IniciarTransacao()
         {
-            if (_comTrans)
+            if (comTransacao)
             {
                 throw new Exception("Já existe uma transação em aberto.");
             }
             if (ConexaoFechada())
                 AbreConexao();
 
-            _comTrans = true;
-            _trans = _con.BeginTransaction();
+            comTransacao = true;
+            dbTransacao = dbConexao.BeginTransaction();
         }
 
         public void ConcluirTransacao()
         {
-            if (!_comTrans)
+            if (!comTransacao)
             {
                 throw new Exception("Não existe nenhuma transação em aberto.");
             }
-            _trans.Commit();
-            _con.Close();
-            _comTrans = false;
+            dbTransacao.Commit();
+            dbConexao.Close();
+            comTransacao = false;
         }
 
         public void CancelaTransacao()
         {
-            if (!_comTrans)
+            if (!comTransacao)
             {
                 throw new Exception("Não existe nenhuma transação em aberto.");
             }
-            _trans.Rollback();
-            _con.Close();
-            _comTrans = false;
+            dbTransacao.Rollback();
+            dbConexao.Close();
+            comTransacao = false;
         }
         #endregion
     }
