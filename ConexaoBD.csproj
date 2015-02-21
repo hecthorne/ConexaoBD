@@ -48,8 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Acesso\Conexao.cs" />
-    <Compile Include="Acesso\CriadorDeParametro.cs" />
     <Compile Include="Acesso\OracleDynamicParameters.cs" />
+    <Compile Include="Acesso\ParametroFactory.cs" />
     <Compile Include="Acesso\TratamentoRetorno.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
